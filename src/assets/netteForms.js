@@ -231,11 +231,38 @@ Nette.isDisabled = function(elem) {
 
 
 /**
+ * CSS class.
+ */
+Nette.formErrorClass = 'nette-form-error';
+
+
+/**
  * Display all error messages.
  */
 Nette.showFormErrors = function(form, errors) {
-	if (errors.length) {
-		Nette.addError(errors[0].element, errors[0].message);
+	var boxes = form.getElementsByTagName('span');
+	for (var i = boxes.length - 1; i >= 0; i--) {
+		if (boxes[i].getAttribute('class') === Nette.formErrorClass) {
+			boxes[i].parentNode.removeChild(boxes[i]);
+		}
+	}
+
+	for (var i = 0; i < errors.length; i++) {
+		if (i === 0 && errors[i].element.focus) {
+			errors[i].element.focus();
+		}
+
+		if (errors[i].message) {
+			var box = document.createElement('span');
+			box.setAttribute('class', Nette.formErrorClass);
+			box.textContent = errors[i].message;
+			errors[i].element.parentNode.insertBefore(box, errors[i].element.nextSibling);
+			Nette.addEvent(errors[i].element, 'keypress', function() {
+				if (this.nextSibling && this.nextSibling.getAttribute('class') === Nette.formErrorClass) {
+					this.parentNode.removeChild(this.nextSibling);
+				}
+			});
+		}
 	}
 };
 
