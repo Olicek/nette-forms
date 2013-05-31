@@ -161,7 +161,7 @@ Nette.validateControl = function(elem, rules, onlyCheck, value) {
 					message = rule.msg.replace(/%(value|\d+)/g, function(foo, m) {
 						return Nette.getValue(m === 'value' ? curElem : elem.form.elements.namedItem(arr[m].control));
 					});
-				Nette.addError(curElem, message);
+				Nette.formErrors.push({element: curElem, message: message});
 			}
 			return false;
 		}
@@ -177,11 +177,14 @@ Nette.validateForm = function(sender) {
 	var form = sender.form || sender,
 		scope = false;
 
-	if (form['nette-submittedBy'] && form['nette-submittedBy'].getAttribute('formnovalidate') !== null) {
+	Nette.formErrors = [];
+
+	if (form['nette-submittedBy'] && form['nette-submittedBy'].getAttribute('formnovalidate')) {
 		var scopeArr = Nette.parseJSON(form['nette-submittedBy'].getAttribute('data-nette-validation-scope'));
 		if (scopeArr.length) {
 			scope = new RegExp('^(' + scopeArr.join('-|') + '-)');
 		} else {
+			Nette.showFormErrors(form, Nette.formErrors);
 			return true;
 		}
 	}
@@ -201,15 +204,13 @@ Nette.validateForm = function(sender) {
 			radios[elem.name] = true;
 		}
 
-		if ((scope && !elem.name.replace(/]\[|\[|]|$/g, '-').match(scope)) || Nette.isDisabled(elem)) {
-			continue;
-		}
-
-		if (!Nette.validateControl(elem)) {
-			return false;
+		if ((!scope || elem.name.replace(/]\[|\[|]|$/g, '-').match(scope)) && !Nette.isDisabled(elem)) {
+			Nette.validateControl(elem);
 		}
 	}
-	return true;
+
+	Nette.showFormErrors(form, Nette.formErrors);
+	return Nette.formErrors.length === 0;
 };
 
 
@@ -230,7 +231,18 @@ Nette.isDisabled = function(elem) {
 
 
 /**
+ * Display all error messages.
+ */
+Nette.showFormErrors = function(form, errors) {
+	if (errors.length) {
+		Nette.addError(errors[0].element, errors[0].message);
+	}
+};
+
+
+/**
  * Display error message.
+ * @deprecated
  */
 Nette.addError = function(elem, message) {
 	if (message) {
