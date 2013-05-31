@@ -247,17 +247,18 @@ Nette.showFormErrors = function(form, errors) {
 		}
 	}
 
-	for (var i = 0; i < errors.length; i++) {
+	for (i = 0; i < errors.length; i++) {
 		if (i === 0 && errors[i].element.focus) {
 			errors[i].element.focus();
 		}
 
 		if (errors[i].message) {
+			Nette.addError(errors[i].element, errors[i].message);
 			var box = document.createElement('span');
 			box.setAttribute('class', Nette.formErrorClass);
-			box.textContent = errors[i].message;
-			errors[i].element.parentNode.insertBefore(box, errors[i].element.nextSibling);
-			Nette.addEvent(errors[i].element, 'keypress', function() {
+			box.textContent = message;
+			elem.parentNode.insertBefore(box, elem.nextSibling);
+			Nette.addEvent(elem, 'keypress', function() {
 				if (this.nextSibling && this.nextSibling.getAttribute('class') === Nette.formErrorClass) {
 					this.parentNode.removeChild(this.nextSibling);
 				}
@@ -570,6 +571,15 @@ Nette.initForm = function(form) {
 		e = e || event;
 		var target = e.target || e.srcElement;
 		form['nette-submittedBy'] = (target.type in {submit: 1, image: 1}) ? target : null;
+	});
+
+	Nette.addEvent(form, 'blur', function() {
+		e = e || event;
+		var target = e.target || e.srcElement;
+		alert(target);
+		if ((target.nodeName.toLowerCase() in {input: 1, select: 1, textarea: 1}) && !target.disabled && !target.readonly) {
+			Nette.validateControl(target);
+		}
 	});
 
 	Nette.toggleForm(form);
